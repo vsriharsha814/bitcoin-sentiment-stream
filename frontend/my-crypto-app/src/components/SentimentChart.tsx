@@ -17,7 +17,6 @@ const { RangePicker } = DatePicker;
 const { Title } = Typography;
 
 const allCoins = ['Bitcoin', 'Ethereum', 'Solana', 'Cardano'];
-type CheckboxValueType = string | number;
 
 type SentimentPoint = {
     time: string;
@@ -51,6 +50,48 @@ const generateMockData = (
     return data;
 };
 
+// ✅ API-compatible fetch function (currently mocked)
+const fetchSentimentData = async (
+    start: Date,
+    end: Date,
+    coins: string[]
+): Promise<SentimentPoint[]> => {
+    const rangeMinutes = (end.getTime() - start.getTime()) / 60000;
+
+    if (rangeMinutes > 180) {
+        message.error('Please select a time range less than or equal to 2 hours.');
+        return [];
+    }
+    const payload = {
+        startTime: start.toISOString(),
+        endTime: end.toISOString(),
+        coins,
+    };
+    // TODO: Replace this with a real API call when backend is ready
+    /*
+
+
+    try {
+      const response = await fetch('/api/sentiment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('❌ API fetch error:', error);
+      message.error('Failed to fetch sentiment data.');
+      return [];
+    }
+    */
+
+    console.log( 'payload:', payload);
+    // Use mock for now
+    return generateMockData(start, end, 5, coins);
+};
+
 const SentimentChart: React.FC = () => {
     const [timeRange, setTimeRange] = useState<[dayjs.Dayjs, dayjs.Dayjs]>(() => {
         const end = dayjs();
@@ -61,35 +102,35 @@ const SentimentChart: React.FC = () => {
     const [selectedCoins, setSelectedCoins] = useState<string[]>(allCoins);
     const [chartData, setChartData] = useState<SentimentPoint[]>([]);
 
-    const updateChart = (start: Date, end: Date, coins: string[]) => {
-        const rangeMinutes = (end.getTime() - start.getTime()) / 60000;
-        if (rangeMinutes > 120) {
-            message.error('Please select a time range less than or equal to 2 hours.');
-            return;
-        }
-        const data = generateMockData(start, end, 5, coins);
-        setChartData(data);
-    };
-
     useEffect(() => {
-        updateChart(timeRange[0].toDate(), timeRange[1].toDate(), selectedCoins);
+        const fetchData = async () => {
+            const data = await fetchSentimentData(
+                timeRange[0].toDate(),
+                timeRange[1].toDate(),
+                selectedCoins
+            );
+            setChartData(data);
+        };
+        fetchData();
     }, [timeRange, selectedCoins]);
 
     const handleTimeChange = (
         values: [dayjs.Dayjs | null, dayjs.Dayjs | null] | null
     ) => {
-        if (
-            values &&
-            values[0] !== null &&
-            values[1] !== null
-        ) {
+        if (values && values[0] && values[1]) {
+            const diffMinutes = values[1].diff(values[0], 'minute');
+            if (diffMinutes > 120) {
+                message.error('Please select a time range less than or equal to 2 hours.');
+                return;
+            }
+
             setTimeRange([values[0], values[1]]);
         }
     };
 
 
     const handleCoinChange = (checkedValues: string[]) => {
-        setSelectedCoins(checkedValues as string[]);
+        setSelectedCoins(checkedValues);
     };
 
     return (
@@ -97,14 +138,71 @@ const SentimentChart: React.FC = () => {
             <div className="chart-controls">
                 <Title level={3}>Crypto Sentiment Chart</Title>
                 <div className="control-group">
-                    <label>Date Range:</label>
-                    <RangePicker
+                    <label>Start Time:</label>
+                    <DatePicker
                         showTime
+                        value={timeRange[0]}
                         format="MM/DD HH:mm"
-                        value={timeRange}
-                        onChange={handleTimeChange}
+                        onChange={(value) => {
+                            if (value) {
+                                const end = timeRange[1];
+                                setTimeRange([value, end]);
+                            }
+                        }}
                     />
                 </div>
+
+                <div className="control-group">
+                    <label>End Time (max 3 hours after start):</label>
+                    <DatePicker
+                        showTime
+                        value={timeRange[1]}
+                        format="MM/DD HH:mm"
+                        disabledDate={(current) => {
+                            const start = timeRange[0];
+                            return current.isBefore(start) || current.isAfter(start.add(3, 'hour'));
+                        }}
+                        disabledTime={(date) => {
+                            const start = timeRange[0];
+                            const max = start.add(3, 'hour');
+                            if (!date) return {};
+
+                            if (!date.isSame(max, 'day')) return {};
+
+                            return {
+                                disabledHours: () => {
+                                    const hours: number[] = [];
+                                    for (let h = max.hour() + 1; h < 24; h++) {
+                                        hours.push(h);
+                                    }
+                                    return hours;
+                                },
+                                disabledMinutes: (selectedHour) => {
+                                    if (selectedHour === max.hour()) {
+                                        const mins: number[] = [];
+                                        for (let m = max.minute() + 1; m < 60; m++) {
+                                            mins.push(m);
+                                        }
+                                        return mins;
+                                    }
+                                    return [];
+                                },
+                            };
+                        }}
+                        onChange={(value) => {
+                            if (value) {
+                                const duration = value.diff(timeRange[0], 'minute');
+                                if (duration > 180) {
+                                    message.error('Range must be 3 hours or less.');
+                                } else {
+                                    setTimeRange([timeRange[0], value]);
+                                }
+                            }
+                        }}
+                    />
+                </div>
+
+
                 <div className="control-group">
                     <label>Select Coins:</label>
                     <Checkbox.Group
@@ -117,11 +215,11 @@ const SentimentChart: React.FC = () => {
 
             <ResponsiveContainer width="100%" height={400}>
                 <LineChart data={chartData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="time" />
-                    <YAxis domain={[-1, 1]} tickFormatter={(v) => v.toFixed(1)} />
-                    <Tooltip />
-                    <Legend />
+                    <CartesianGrid strokeDasharray="3 3"/>
+                    <XAxis dataKey="time"/>
+                    <YAxis domain={[-1, 1]} tickFormatter={(v) => v.toFixed(1)}/>
+                    <Tooltip/>
+                    <Legend/>
                     {selectedCoins.map((coin, index) => (
                         <Line
                             key={coin}
@@ -129,7 +227,7 @@ const SentimentChart: React.FC = () => {
                             dataKey={coin}
                             strokeWidth={2}
                             stroke={`hsl(${index * 90}, 70%, 50%)`}
-                            dot={{ r: 3 }}
+                            dot={{r: 3}}
                         />
                     ))}
                 </LineChart>
