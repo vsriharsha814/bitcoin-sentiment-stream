@@ -50,7 +50,6 @@ const generateMockData = (
     return data;
 };
 
-// ✅ API-compatible fetch function (currently mocked)
 const fetchSentimentData = async (
     start: Date,
     end: Date,
@@ -81,14 +80,13 @@ const fetchSentimentData = async (
       const data = await response.json();
       return data;
     } catch (error) {
-      console.error('❌ API fetch error:', error);
+      console.error('API fetch error:', error);
       message.error('Failed to fetch sentiment data.');
       return [];
     }
     */
 
     console.log( 'payload:', payload);
-    // Use mock for now
     return generateMockData(start, end, 5, coins);
 };
 
@@ -145,8 +143,14 @@ const SentimentChart: React.FC = () => {
                         format="MM/DD HH:mm"
                         onChange={(value) => {
                             if (value) {
-                                const end = timeRange[1];
-                                setTimeRange([value, end]);
+                                const maxEnd = value.add(3, 'hour');
+                                let newEnd = timeRange[1];
+
+                                if (!newEnd || newEnd.isBefore(value) || newEnd.isAfter(maxEnd)) {
+                                    newEnd = maxEnd;
+                                }
+
+                                setTimeRange([value, newEnd]);
                             }
                         }}
                     />
