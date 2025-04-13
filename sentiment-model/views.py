@@ -1,7 +1,7 @@
 from vader.vaderSentiment import SentimentIntensityAnalyzer
 analyzer = SentimentIntensityAnalyzer()
 
-def get_sentences_sentiments(sentences):
+def get_sentence_sentiments(sentences):
     sentence_sentiments = []
 
     for sentence in sentences:
