@@ -2,7 +2,7 @@ import praw
 from dotenv import load_dotenv
 from pathlib import Path
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 
 # Load env vars from .env
 load_dotenv(dotenv_path=Path(__file__).resolve().parent / ".env")
@@ -21,7 +21,7 @@ def fetch_reddit_posts(limit=10):
         posts.append({
             "title": post.title,
             "text": post.selftext,
-            "timestamp": datetime.fromtimestamp(post.created_utc, tz=datetime.timezone.utc).isoformat(),
+            "timestamp": datetime.fromtimestamp(post.created_utc, tz=timezone.utc).isoformat(),
             "author": post.author.name if post.author else "unknown"
         })
     return posts
