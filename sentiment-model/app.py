@@ -4,7 +4,7 @@ from views import get_para_sentiments
 
 app = Flask(__name__)
 
-@app.route('/', methods=['GET','POST'])
+@app.route('/', methods=['GET'])
 def index():
     data = "Hello World"
     return jsonify(data)
@@ -21,7 +21,6 @@ def para_sentiment_analyze():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
 
 if __name__ == '__main__':
     app.run()
