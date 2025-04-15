@@ -6,7 +6,8 @@ import Home from './pages/Home';
 import About from './pages/About';
 import NotFound from './pages/NotFound';
 import './App.css';
-import SentimentChart from './components/SentimentChart';
+import SentimentChart from './pages/SentimentChart';
+import LivePage from "./pages/LivePage";
 
 const App: React.FC = () => {
     return (
@@ -16,6 +17,7 @@ const App: React.FC = () => {
                 <main className="main-content">
                     <Routes>
                         <Route path="/" element={<SentimentChart />} />
+                        <Route path="/live" element={<LivePage />} />
                         <Route path="/about" element={<About />} />
                         <Route path="*" element={<NotFound />} />
                     </Routes>

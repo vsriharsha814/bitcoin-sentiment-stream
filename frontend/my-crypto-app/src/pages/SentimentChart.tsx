@@ -16,11 +16,22 @@ import './SentimentChart.css';
 const { RangePicker } = DatePicker;
 const { Title } = Typography;
 
-const allCoins = ['Bitcoin', 'Ethereum', 'Solana', 'Cardano'];
+const allCoins = ['Bitcoin', 'Ethereum', 'Tether','XRP','BNB','Solana','USD Coin','TRON','Dogecoin','Cardano'];
+const coinColors: string[] = [
+    '#e6194b',
+    '#3cb44b',
+    '#ffe119',
+    '#0082c8',
+    '#f58231',
+    '#911eb4',
+    '#46f0f0',
+    '#f032e6',
+    '#d2f53c',
+    '#fabebe',
+];
 
 type SentimentPoint = {
     time: string;
-    timestamp: number;
     [coin: string]: number | string;
 };
 
@@ -35,8 +46,7 @@ const generateMockData = (
 
     while (current <= end) {
         const point: SentimentPoint = {
-            time: dayjs(current).format('MM/DD HH:mm'),
-            timestamp: current.getTime(),
+            time: dayjs(current).format('DD-MMMM-YYYY HH:mm'),
         };
 
         selectedCoins.forEach((coin) => {
@@ -220,7 +230,11 @@ const SentimentChart: React.FC = () => {
             <ResponsiveContainer width="100%" height={400}>
                 <LineChart data={chartData}>
                     <CartesianGrid strokeDasharray="3 3"/>
-                    <XAxis dataKey="time"/>
+                    <XAxis
+                        dataKey="time"
+                        tickFormatter={(v) => dayjs(v, 'DD-MMMM-YYYY HH:mm').format('DD-MMMM HH:mm')}
+                        interval="preserveStartEnd"
+                    />
                     <YAxis domain={[-1, 1]} tickFormatter={(v) => v.toFixed(1)}/>
                     <Tooltip/>
                     <Legend/>
@@ -230,7 +244,7 @@ const SentimentChart: React.FC = () => {
                             type="monotone"
                             dataKey={coin}
                             strokeWidth={2}
-                            stroke={`hsl(${index * 90}, 70%, 50%)`}
+                            stroke={coinColors[index % coinColors.length]}
                             dot={{r: 3}}
                         />
                     ))}

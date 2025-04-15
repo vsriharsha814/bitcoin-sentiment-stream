@@ -7,7 +7,8 @@ const Header: React.FC = () => {
         <header className="header">
             <h1 className="logo">CryptoPulse</h1>
             <nav className="nav">
-                <Link to="/">Home</Link>
+                <Link to="/">Historical</Link>
+                <Link to="/live">Live</Link>
                 <Link to="/about">About</Link>
             </nav>
         </header>
