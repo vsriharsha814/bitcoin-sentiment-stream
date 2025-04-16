@@ -27,20 +27,34 @@ COIN_SUBREDDITS = {
     "ADA": "cardano"
 }
 
-def fetch_reddit_posts(limit=10):
+def fetch_reddit_posts(limit=10, time_filter="all"):
     posts = []
+    queries = {
+        "features": '"new features" OR "use cases"',
+        "leadership": '"founder" OR "CEO" OR "leadership"',
+        "security": '"hack" OR "security breach" OR "exploit"',
+        "market": '"price prediction" OR "market trend"',
+        "regulations": '"regulation" OR "government policy"',
+        "community": '"adoption" OR "community sentiment"',
+        "partnerships": '"partnership" OR "integration"',
+        "staking": '"mining" OR "staking" OR "validator"'
+    }
+
     for coin, subreddits in COIN_SUBREDDITS.items():
         subreddit = reddit.subreddit(subreddits)
-        for post in subreddit.hot(limit=limit):
-            posts.append({
-                "coin": coin,
-                "subreddit": subreddit.display_name,
-                "title": post.title,
-                "text": post.selftext,
-                "timestamp": datetime.fromtimestamp(post.created_utc, tz=timezone.utc).isoformat(),
-                "author": post.author.name if post.author else "unknown",
-                "score": post.score,
-                "url": post.url,
-                "num_comments": post.num_comments
-            })
+        for label, query in queries.items():
+            full_query = f"{query} {coin}"
+            for post in subreddit.search(full_query, sort="new" if time_filter != "all" else "relevance", time_filter=time_filter, limit=limit):
+                posts.append({
+                    "coin": coin,
+                    "subreddit": subreddit.display_name,
+                    "category": label,
+                    "title": post.title,
+                    "text": post.selftext,
+                    "timestamp": datetime.fromtimestamp(post.created_utc, tz=timezone.utc).isoformat(),
+                    "author": post.author.name if post.author else "unknown",
+                    "score": post.score,
+                    "url": post.url,
+                    "num_comments": post.num_comments
+                })
     return posts
