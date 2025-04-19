@@ -39,19 +39,6 @@ def login_required(f):
 def index():
     return render_template('index.html')
 
-@app.route('/api/get-firebase-config', methods=['GET'])
-def get_firebase_config():
-    firebase_config = {
-        'apiKey': os.environ.get('FIREBASE_API_KEY'),
-        'authDomain': os.environ.get('FIREBASE_AUTH_DOMAIN'),
-        'projectId': os.environ.get('FIREBASE_PROJECT_ID'),
-        'storageBucket': os.environ.get('FIREBASE_STORAGE_BUCKET'),
-        'messagingSenderId': os.environ.get('FIREBASE_MESSAGING_SENDER_ID'),
-        'appId': os.environ.get('FIREBASE_APP_ID'),
-        'measurementId': os.environ.get('FIREBASE_MEASUREMENT_ID'),
-    }
-    return jsonify(firebase_config)
-
 # Route to handle Google Sign-In and user creation/update
 @app.route('/api/auth/google', methods=['POST'])
 def auth_google():
