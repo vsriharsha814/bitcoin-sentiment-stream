@@ -1,20 +1,17 @@
-# app.py
-from flask import Flask, request, jsonify, session
+from flask import Flask, request, jsonify, session, render_template
 import firebase_admin
 from firebase_admin import credentials, firestore, auth
 import os
-import json
 from functools import wraps
+from flask_cors import CORS
 
 app = Flask(__name__)
-app.secret_key = os.environ.get("SECRET_KEY", "your-secret-key")  # Change in production
+CORS(app)
+app.secret_key = os.environ.get("FLASK_SECRET_KEY", "your-secret-key")
 
-# Initialize Firebase Admin SDK
-# Make sure to place your Firebase service account key JSON file in a secure location
-cred = credentials.Certificate("path/to/serviceAccountKey.json")
+cred = credentials.Certificate("crypto-pulse-aacc0-firebase-adminsdk-fbsvc-d2ecb486ef.json")
 firebase_app = firebase_admin.initialize_app(cred)
 db = firestore.client()
-
 
 # Authentication decorator
 def login_required(f):
@@ -38,6 +35,9 @@ def login_required(f):
 
     return decorated_function
 
+@app.route('/')
+def index():
+    return render_template('index.html')
 
 # Route to handle Google Sign-In and user creation/update
 @app.route('/api/auth/google', methods=['POST'])
