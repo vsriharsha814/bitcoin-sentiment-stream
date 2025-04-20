@@ -1,4 +1,3 @@
-import base64
 import json
 
 from flask import Flask, request, jsonify, session, render_template
@@ -227,7 +226,6 @@ def add_question():
 
     except Exception as e:
         return jsonify({"error": "Failed to add question", "details": str(e)}), 500
-
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 8080))
