@@ -1,6 +1,6 @@
 import json
 
-from flask import Flask, request, jsonify, session, render_template
+from flask import Flask, request, jsonify, render_template
 import firebase_admin
 from firebase_admin import credentials, firestore, auth
 import os
