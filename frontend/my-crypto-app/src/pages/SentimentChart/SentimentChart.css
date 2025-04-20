@@ -9,14 +9,27 @@
 .chart-controls {
     display: flex;
     flex-direction: column;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.date-submit-row {
+    display: flex;
+    flex-wrap: wrap;
     gap: 1rem;
-    margin-bottom: 1.5rem;
+    align-items: flex-end;
 }
 
 .control-group {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
+}
+
+.submit-button-wrapper {
+    display: flex;
+    align-items: flex-end;
+    height: 100%;
 }
 
 .ant-picker {
@@ -28,4 +41,15 @@
     display: flex;
     flex-wrap: wrap;
     gap: 1rem;
+}
+
+@media (max-width: 600px) {
+    .date-submit-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .submit-button-wrapper {
+        align-items: stretch;
+    }
 }
