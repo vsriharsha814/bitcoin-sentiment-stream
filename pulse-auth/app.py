@@ -1,3 +1,6 @@
+import base64
+import json
+
 from flask import Flask, request, jsonify, session, render_template
 import firebase_admin
 from firebase_admin import credentials, firestore, auth
@@ -9,7 +12,8 @@ app = Flask(__name__)
 CORS(app)
 app.secret_key = os.environ.get("FLASK_SECRET_KEY", "your-secret-key")
 
-cred = credentials.Certificate("crypto-pulse-aacc0-firebase-adminsdk-fbsvc-d2ecb486ef.json")
+json_creds = json.loads(os.environ['FIREBASE_CREDS'])
+cred = credentials.Certificate(json_creds)
 firebase_app = firebase_admin.initialize_app(cred)
 db = firestore.client()
 
@@ -226,4 +230,5 @@ def add_question():
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 8080))
+    app.run(debug=False, host='0.0.0.0', port=port)
