@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from flask import Flask, jsonify, request
 from fetch_posts import fetch_reddit_posts, reddit
 from dotenv import load_dotenv
@@ -37,50 +39,64 @@ def reddit_status():
     except Exception as e:
         return {"status": "error", "message": str(e)}, 401
 
-@app.route('/news', methods=['GET'])
+@app.route('/news', methods=['POST'])
 def get_filtered_news():
-    currency_code = request.args.get('currency_code', default=None)
-    start_date = request.args.get('start_date') or '2017-09-01'
-    end_date = request.args.get('end_date') or '2025-01-31'
+    data = request.get_json(force=True) or {}
+    start_iso      = data.get('start_date',  '2017-09-01')
+    end_iso        = data.get('end_date',    '2025-01-31')
+    currency_codes = data.get('currency_codes')
+
+    try:
+        start_dt = datetime.fromisoformat(start_iso.replace("Z", "+00:00"))
+        end_dt   = datetime.fromisoformat(end_iso.replace("Z",   "+00:00"))
+    except ValueError:
+        return jsonify({"error": "Invalid ISO format for start_date or end_date"}), 400
 
     try:
         conn = get_db_connection()
-        cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        cur  = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
-        # Build base query
-        base_query = """
-                SELECT cn.id, cn.title, cn.url, cn.score, cn.newsdatetime
-                FROM crypto_news cn
-                JOIN news_currency nc ON cn.id = nc.newsid
-                JOIN currency c ON nc.currencyid = c.id
-                WHERE cn.newsdatetime >= %s AND cn.newsdatetime <= %s
-            """
+        query = """
+            SELECT
+              cn.id,
+              cn.title,
+              cn.url,
+              cn.score,
+              cn.newsdatetime,
+              c.code AS currency_code
+            FROM crypto_news cn
+            JOIN news_currency nc ON cn.id = nc.newsid
+            JOIN currency c        ON nc.currencyid = c.id
+            WHERE cn.newsdatetime >= %s
+              AND cn.newsdatetime <= %s
+        """
 
-        params = [start_date, end_date]
+        params = [start_dt, end_dt]
 
-        # Add currency_code filter if provided
-        if currency_code:
-            base_query += " AND c.code = %s"
-            params.append(currency_code)
+        if currency_codes:
+            query += " AND c.code = ANY(%s)"
+            params.append(currency_codes)
 
-        base_query += " ORDER BY cn.newsdatetime DESC"
+        query += " ORDER BY cn.newsdatetime DESC"
 
-        cur.execute(base_query, params)
+        cur.execute(query, params)
         rows = cur.fetchall()
 
-        results = [
+        articles = [
             {
-                "id": row["id"],
-                "title": row["title"],
-                "url": row["url"],
-                "score": row["score"],
-                "newsdatetime": row["newsdatetime"].strftime("%Y-%m-%d %H:%M:%S")
-            } for row in rows
+                "id":            row["id"],
+                "title":         row["title"],
+                "url":           row["url"],
+                "score":         row["score"],
+                "currency_code": row["currency_code"],
+                "newsdatetime":  row["newsdatetime"].strftime("%Y-%m-%dT%H:%M:%SZ")
+            }
+            for row in rows
         ]
 
         cur.close()
         conn.close()
-        return jsonify(results)
+        return jsonify(articles)
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
