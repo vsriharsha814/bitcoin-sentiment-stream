@@ -92,7 +92,7 @@ const LivePage: React.FC = () => {
             <Spin spinning={connecting && !hasFailed} tip="Connecting to live sentiment feed...">
                 {hasFailed ? (
                     <div style={{ textAlign: 'center', color: 'red', margin: '2rem 0' }}>
-                        Failed to connect to server.
+                        Failed to connect to the server.
                     </div>
                 ) : (
                     <>

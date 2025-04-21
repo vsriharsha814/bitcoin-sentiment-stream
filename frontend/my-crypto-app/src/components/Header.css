@@ -97,9 +97,19 @@
     color: white;
     font-weight: 500;
     margin-right: 6px;
-    line-height: 1;
+    display: flex;
+    align-items: center;
+    gap: 4px;
 }
 
+.dropdown-icon {
+    font-size: 12px;
+    transition: transform 0.2s ease;
+}
+
+.dropdown-icon.open {
+    transform: rotate(180deg);
+}
 
 .dropdown-menu {
     position: absolute;

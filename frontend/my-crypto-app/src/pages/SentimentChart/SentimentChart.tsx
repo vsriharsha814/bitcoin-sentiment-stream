@@ -34,7 +34,8 @@ const coinColors = [
 
 type SentimentPoint = {
     time: string;
-    [coin: string]: number | string;
+    sentiment: Record<string, number>;
+    title: Record<string, string>;
 };
 
 const generateMockData = (
@@ -46,19 +47,40 @@ const generateMockData = (
     const data: SentimentPoint[] = [];
     const current = new Date(start);
 
+    const mockTitles = [
+        "Strong investor interest pushes price higher",
+        "Bearish trend due to market uncertainty",
+        "Major exchange lists the token",
+        "Whale activity detected",
+        "Analyst upgrades forecast",
+        "Market correction in progress",
+        "Protocol upgrade announced",
+        "Partnership news drives optimism",
+        "Legal clarity improves sentiment",
+        "Community votes on governance proposal"
+    ];
+
     while (current <= end) {
         const point: SentimentPoint = {
             time: dayjs(current).format('DD-MMMM-YYYY HH:mm'),
+            sentiment: {},
+            title: {}
         };
+
         selectedCoins.forEach((coin) => {
-            point[coin] = parseFloat((Math.random() * 2 - 1).toFixed(2));
+            const sentimentScore = parseFloat((Math.random() * 2 - 1).toFixed(2));
+            const randomTitle = mockTitles[Math.floor(Math.random() * mockTitles.length)];
+            point.sentiment[coin] = sentimentScore;
+            point.title[coin] = randomTitle;
         });
+
         data.push(point);
         current.setMinutes(current.getMinutes() + intervalMinutes);
     }
 
     return data;
 };
+
 
 const fetchSentimentData = async (
     start: Date,
@@ -220,13 +242,44 @@ const SentimentChart: React.FC = () => {
                             interval="preserveStartEnd"
                         />
                         <YAxis domain={[-1, 1]} tickFormatter={(v) => v.toFixed(1)} />
-                        <Tooltip />
-                        <Legend />
+                        <Tooltip
+                            wrapperStyle={{ pointerEvents: 'auto', maxHeight: 300, overflowY: 'auto' }}
+                            content={({ active, payload, label }) => {
+                                if (!active || !payload || payload.length === 0) return null;
+
+                                return (
+                                    <div className="custom-tooltip">
+                                        <div className="custom-tooltip-header">{label}</div>
+                                        <div className="custom-tooltip-body">
+                                            {payload.map((entry) => {
+                                                const coin = (entry.dataKey as string).split('.')[1];
+                                                const value = entry.value;
+                                                const fullData = entry.payload as any;
+                                                const reason = fullData.title?.[coin];
+
+                                                return (
+                                                    <div key={coin} className="custom-tooltip-item">
+                                                        <strong>{coin}: {Number(value).toFixed(2)}</strong>
+                                                        {reason && <small>{reason}</small>}
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                );
+                            }}
+                        />
+                        <Legend
+                            formatter={(value) => {
+                                const coin = value.split('.')[1];
+                                return <span style={{ color: '#333' }}>{coin}</span>;
+                            }}
+                        />
                         {selectedCoins.map((coin, index) => (
                             <Line
                                 key={coin}
                                 type="monotone"
-                                dataKey={coin}
+                                dataKey={`sentiment.${coin}`}
                                 strokeWidth={2}
                                 stroke={coinColors[index % coinColors.length]}
                                 dot={{ r: 3 }}

@@ -53,3 +53,76 @@
         align-items: stretch;
     }
 }
+
+.custom-tooltip {
+    width: 320px;
+    max-height: 280px;
+    display: flex;
+    flex-direction: column;
+    background-color: #fff;
+    border: 1px solid #ccc;
+    padding: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    border-radius: 8px;
+    overflow: hidden;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.custom-tooltip-header {
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 10px;
+    flex-shrink: 0;
+}
+
+.custom-tooltip-body {
+    overflow-y: auto;
+    max-height: 200px;
+    padding-right: 6px;
+    scrollbar-width: thin;
+    scrollbar-color: #ccc transparent;
+}
+
+.custom-tooltip-body::-webkit-scrollbar {
+    width: 6px;
+}
+
+.custom-tooltip-body::-webkit-scrollbar-thumb {
+    background-color: #ccc;
+    border-radius: 3px;
+}
+
+.custom-tooltip-item {
+    margin-bottom: 10px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid #eee;
+}
+
+.custom-tooltip-item strong {
+    color: #0073e6;
+    display: block;
+}
+
+.custom-tooltip-item small {
+    display: block;
+    color: #555;
+    font-size: 12px;
+    margin-top: 4px;
+}
+
+.recharts-tooltip-wrapper {
+    z-index: 999 !important;
+    pointer-events: auto !important;
+}
+.tooltip-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.sentiment-value {
+    margin-left: 8px;
+    font-weight: 500;
+    color: #222;
+}
