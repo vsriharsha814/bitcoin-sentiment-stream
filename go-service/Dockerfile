@@ -1,31 +1,35 @@
-# Stage 1: Build the Go binary
+# Stage 1: Build the Go binary
 FROM golang:1.24 AS builder
-
-# Set the working directory inside the container
 WORKDIR /app
 
-# Copy go.mod and go.sum files (if using modules) and download dependencies
+# 1) Cache dependencies
 COPY go.mod go.sum ./
 RUN go mod download
 
-# Copy all source code and the mapping file into the container
+# 2) Copy the rest of your source
 COPY . .
 
-# Build the binary for Linux. Adjust the output binary name if needed.
-RUN CGO_ENABLED=0 GOOS=linux go build -o go-service main.go
+# 3) Build the static binary
+RUN CGO_ENABLED=0 \
+    GOOS=linux \
+    GOARCH=amd64 \
+    go build -o go-service ./cmd/server/main.go
 
-# Stage 2: Create a minimal container with the compiled binary
+# Stage 2: Production image
 FROM alpine:latest
+RUN apk add --no-cache ca-certificates
 
-# Set the working directory in the minimal container
 WORKDIR /root/
 
-# Copy the binary and the mapping file from the builder stage to the current stage.
-COPY --from=builder /app/go-service .
-COPY --from=builder /app/mapping.json .
+# 1) Copy the binary
+COPY --from=builder /app/go-service ./
 
-# Expose port 8080 for the service
+# 2) Copy your mapping.json
+COPY --from=builder /app/mapping.json ./
+
+# 3) Copy your .env so godotenv.Load() will find it
+COPY --from=builder /app/.env ./.env
+
 EXPOSE 8080
 
-# Command to run the binary when the container starts
 CMD ["./go-service"]
