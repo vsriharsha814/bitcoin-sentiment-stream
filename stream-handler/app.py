@@ -32,7 +32,7 @@ def reddit_posts():
         return {"status": "error", "message": "Limit must be an integer between 1 and 100."}, 400
 
     print(f"Fetching {limit} Reddit posts...")
-    posts = fetch_reddit_posts(limit=limit)
+    posts = fetch_reddit_posts(COINS, QUESTIONS, limit=limit)
     print(f"Fetched {len(posts)} posts")
     return jsonify(posts)
 
@@ -122,6 +122,30 @@ def get_filtered_news():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+COINS = [
+    {"id": 1, "symbol": "BTC", "subreddit": "Bitcoin"},
+    {"id": 2, "symbol": "ETH", "subreddit": "ethereum"},
+    {"id": 3, "symbol": "USDT", "subreddit": "Tether+CryptoCurrency"},
+    {"id": 4, "symbol": "XRP", "subreddit": "Ripple"},
+    {"id": 5, "symbol": "BNB", "subreddit": "binance"},
+    {"id": 6, "symbol": "SOL", "subreddit": "solana"},
+    {"id": 7, "symbol": "USDC", "subreddit": "CryptoCurrency"},
+    {"id": 8, "symbol": "TRX", "subreddit": "Tronix"},
+    {"id": 9, "symbol": "DOGE", "subreddit": "dogecoin"},
+    {"id": 10, "symbol": "ADA", "subreddit": "cardano"}
+]
+
+QUESTIONS = [
+    {"id": 1, "label": "features",      "query": '"new features" OR "use cases"'},
+    {"id": 2, "label": "leadership",    "query": '"founder" OR "CEO" OR "leadership"'},
+    {"id": 3, "label": "security",      "query": '"hack" OR "security breach" OR "exploit"'},
+    {"id": 4, "label": "market",        "query": '"price prediction" OR "market trend"'},
+    {"id": 5, "label": "regulations",   "query": '"regulation" OR "government policy"'},
+    {"id": 6, "label": "community",     "query": '"adoption" OR "community sentiment"'},
+    {"id": 7, "label": "partnerships",  "query": '"partnership" OR "integration"'},
+    {"id": 8, "label": "staking",       "query": '"mining" OR "staking" OR "validator"'}
+]
+
 # New reddit_db_dump endpoint
 @app.route("/reddit_db_dump", methods=["POST"])
 def reddit_db_dump():
@@ -135,7 +159,7 @@ def reddit_db_dump():
 
     try:
         print(f"Fetching Reddit posts with limit={limit} and time_filter='{time_filter}'")
-        posts = fetch_reddit_posts(limit=limit, time_filter=time_filter)
+        posts = fetch_reddit_posts(COINS, QUESTIONS, limit=limit, time_filter=time_filter)
         print(f"Fetched {len(posts)} posts from Reddit")
 
         if not posts:
