@@ -24,10 +24,10 @@ def fetch_reddit_posts(coins, questions, limit=10, time_filter="all"):
             label = question["label"]
             question_id = question["id"]
             query = question["query"]
-            full_query = f"{query} {coin['symbol']}"
+            full_query = f"{query} {coin['code']}"
             for post in subreddit.search(full_query, sort="new" if time_filter != "all" else "relevance", time_filter=time_filter, limit=limit):
                 posts.append({
-                    "coin": coin["symbol"],
+                    "coin": coin["code"],
                     "coin_id": coin_id,
                     "subreddit": subreddit.display_name,
                     "category": label,
