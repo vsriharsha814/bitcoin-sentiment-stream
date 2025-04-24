@@ -1,5 +1,6 @@
 from fetch_tweets import fetch_tweets
-from datetime import datetime
+from datetime import datetime, timezone
+
 
 from flask import Flask, jsonify, request
 from fetch_posts import fetch_reddit_posts, reddit
@@ -234,12 +235,12 @@ QUESTIONS = [
 @app.route("/reddit_db_dump", methods=["POST"])
 def reddit_db_dump():
     data = request.get_json()
-    limit = data.get("limit", 2)
-    time_filter = data.get("time_filter", "all")
+    limit = data.get("limit", 200)
+    time_filter = data.get("time_filter", "day")
 
-    if not isinstance(limit, int) or limit < 1 or limit > 100:
-        print("Invalid limit provided.")
-        return {"status": "error", "message": "Limit must be an integer between 1 and 100."}, 400
+    # if not isinstance(limit, int) or limit < 1 or limit > 100:
+    #     print("Invalid limit provided.")
+    #     return {"status": "error", "message": "Limit must be an integer between 1 and 100."}, 400
 
     try:
         print(f"Fetching Reddit posts with limit={limit} and time_filter='{time_filter}'")
@@ -262,6 +263,7 @@ def reddit_db_dump():
             ON CONFLICT DO NOTHING;
         """
 
+        inserted_count = 0
         for post in posts:
             try:
                 print(f"Inserting post: {post['title']} (score: {post['score']})")
@@ -274,25 +276,25 @@ def reddit_db_dump():
                     f"{post['title']} {post['text']}",
                     get_sentiment_score(f"{post['title']} {post['text']}"),
                     post["timestamp"],
-                    datetime.timezone.utc().isoformat(),
+                    datetime.now(timezone.utc).isoformat(),
                     json.dumps({
                         "score": post["score"],
                         "num_comments": post["num_comments"]
                     }),
                     post["coin"]
                 ))
-                print(f"Inserted row count: {cur.rowcount}")
+                inserted_count += 1
             except Exception as inner_e:
                 print(f"Failed to insert post: {post}")
                 print(f"Insert error: {inner_e}")
 
         conn.commit()
         print("Commit completed. Check the DB to confirm records.")
-        print(f"Successfully committed {len(posts)} posts.")
+        print(f"Successfully inserted {inserted_count} out of {len(posts)} posts.")
         cur.close()
         conn.close()
 
-        return {"status": "success", "message": f"{len(posts)} Reddit posts inserted into DB."}
+        return {"status": "success", "message": f"{inserted_count} Reddit posts inserted into DB."}
 
     except Exception as e:
         print(f"Error during DB dump: {e}")
