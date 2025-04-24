@@ -29,12 +29,15 @@ import requests
 SENTIMENT_API_URL = "https://sentiment-app-877042335787.us-central1.run.app/para-sentiment-analyze"
 
 def get_sentiment_score(text):
+    if not text or not text.strip():
+        print("Empty or invalid text for sentiment analysis. Skipping.")
+        return None
     try:
         response = requests.post(SENTIMENT_API_URL, json=[text])
         if response.status_code == 200:
             sentiments = response.json()
             if sentiments and isinstance(sentiments, list):
-                return sentiments[0].get("score") if isinstance(sentiments[0], dict) else None
+                return sentiments[0]
             return None
         else:
             print(f"Sentiment API failed with status {response.status_code}: {response.text}")
@@ -254,31 +257,29 @@ def reddit_db_dump():
 
         insert_query = """
             INSERT INTO raw_messages
-            (source, external_id, question_id, currency_id, author, content, sentiment_score, created_at, fetched_at, metadata)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            (source, external_id, question_id, currency_id, author, content, sentiment_score, created_at, fetched_at, metadata, coin)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             ON CONFLICT DO NOTHING;
         """
 
         for post in posts:
             try:
                 print(f"Inserting post: {post['title']} (score: {post['score']})")
-                sentiment_score = get_sentiment_score(post["text"])
                 cur.execute(insert_query, (
                     "reddit",
-                    post["url"],
+                    f"reddit_{post['id']}",
                     post["question_id"],
                     post["coin_id"],
                     post["author"],
-                    post["text"],
-                    sentiment_score,
+                    f"{post['title']} {post['text']}",
+                    get_sentiment_score(f"{post['title']} {post['text']}"),
                     post["timestamp"],
-                    datetime.utcnow().isoformat() + "Z",
+                    datetime.timezone.utc().isoformat(),
                     json.dumps({
-                        "coin": post["coin"],
-                        "category": post["category"],
                         "score": post["score"],
                         "num_comments": post["num_comments"]
-                    })
+                    }),
+                    post["coin"]
                 ))
                 print(f"Inserted row count: {cur.rowcount}")
             except Exception as inner_e:
@@ -327,7 +328,7 @@ def test_insert():
             "currency_id": 94,
             "author": "u/susan",
             "content": "Market trends suggest a bullish run for coin_name.",
-            "sentiment_score": 0.8,
+            "sentiment_score": get_sentiment_score("Bitcoin is looking strong this week! The bullish momentum seems to be building up"),
             "created_at": now,
             "fetched_at": now,
             "metadata": json.dumps({}),

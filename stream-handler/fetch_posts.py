@@ -38,6 +38,7 @@ def fetch_reddit_posts(coins, questions, limit=10, time_filter="all"):
                     "author": post.author.name if post.author else "unknown",
                     "score": post.score,
                     "url": post.url,
-                    "num_comments": post.num_comments
+                    "num_comments": post.num_comments,
+                    'id': post.id
                 })
     return posts
