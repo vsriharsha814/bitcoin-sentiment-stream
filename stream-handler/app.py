@@ -1,4 +1,3 @@
-from fetch_tweets import fetch_tweets
 from datetime import datetime, timezone
 
 
@@ -74,20 +73,20 @@ def reddit_posts():
     return jsonify(posts)
 
 # Twitter endpoint
-@app.route("/twitter_posts", methods=["POST"])
-def twitter_posts():
-    data = request.get_json()
-    query = data.get("query", "Bitcoin")
-    limit = data.get("limit", 10)
-
-    if not isinstance(limit, int) or limit < 1 or limit > 100:
-        return {"status": "error", "message": "Limit must be an integer between 1 and 100."}, 400
-
-    try:
-        tweets = fetch_tweets(query=query, limit=limit)
-        return jsonify(tweets)
-    except Exception as e:
-        return {"status": "error", "message": str(e)}, 500
+# @app.route("/twitter_posts", methods=["POST"])
+# def twitter_posts():
+#     data = request.get_json()
+#     query = data.get("query", "Bitcoin")
+#     limit = data.get("limit", 10)
+#
+#     if not isinstance(limit, int) or limit < 1 or limit > 100:
+#         return {"status": "error", "message": "Limit must be an integer between 1 and 100."}, 400
+#
+#     try:
+#         tweets = fetch_tweets(query=query, limit=limit)
+#         return jsonify(tweets)
+#     except Exception as e:
+#         return {"status": "error", "message": str(e)}, 500
 
 @app.route("/reddit_status", methods=["GET"])
 def reddit_status():
