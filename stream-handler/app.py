@@ -254,7 +254,6 @@ def reddit_db_dump():
 
         conn = get_db_connection()
         print("Database connection established.")
-        cur = conn.cursor()
 
         insert_query = """
             INSERT INTO raw_messages
@@ -262,6 +261,8 @@ def reddit_db_dump():
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             ON CONFLICT DO NOTHING;
         """
+
+        cur = conn.cursor()
 
         inserted_count = 0
         for post in posts:
@@ -291,7 +292,8 @@ def reddit_db_dump():
         conn.commit()
         print("Commit completed. Check the DB to confirm records.")
         print(f"Successfully inserted {inserted_count} out of {len(posts)} posts.")
-        cur.close()
+        if not cur.closed:
+            cur.close()
         conn.close()
 
         return {"status": "success", "message": f"{inserted_count} Reddit posts inserted into DB."}
