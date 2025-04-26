@@ -30,6 +30,11 @@ COPY --from=builder /app/mapping.json ./
 # 3) Copy your .env so godotenv.Load() will find it
 COPY --from=builder /app/.env ./.env
 
+# 3) Copy your Firebase service account key
+COPY Service-Account-Cred-firebase.json ./
+# 4) Tell the Firebase SDK where to find it
+ENV GOOGLE_APPLICATION_CREDENTIALS="/root/Service-Account-Cred-firebase.json"
+
 EXPOSE 8080
 
 CMD ["./go-service"]

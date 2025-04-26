@@ -1,7 +1,6 @@
 package main
 
 import (
-    "fmt"
     "io/ioutil"
     "log"
     "net/http"
@@ -14,6 +13,7 @@ import (
     "github.com/cosmic-hash/CryptoPulse/pkg/db"
     handlers "github.com/cosmic-hash/CryptoPulse/pkg/handler"
 	"github.com/cosmic-hash/CryptoPulse/pkg/firebase"
+	openai "github.com/cosmic-hash/CryptoPulse/pkg/openai"
 	 
 )
 
@@ -22,7 +22,11 @@ func main() {
     if err := godotenv.Load(); err != nil {
         log.Println("No .env file found, falling back to env vars")
     }
+	// DEBUG: verify the key is there
+    //log.Printf("→ OPENAI_API_KEY=%q", os.Getenv("OPENAI_API_KEY"))
 
+    // 1.a) Initialize the OpenAI client now that the .env is loaded
+    openai.InitClient()
     // 1.a) Debug: print out the DATABASE_URL you're using
     // log.Printf("→ DATABASE_URL=%q", os.Getenv("DATABASE_URL"))
 
@@ -104,7 +108,12 @@ http.HandleFunc("/alerts", func(w http.ResponseWriter, r *http.Request) {
     http.HandleFunc("/sentiment", handlers.SentimentHandler)
     http.HandleFunc("/ws", handlers.WSHandler)
 	http.HandleFunc("/aggregate", handlers.AggregateHandler)
+	http.HandleFunc("/explain", handlers.ExplainSentimentHandler)
 
-    fmt.Println("Server is listening on :8080")
-    log.Fatal(http.ListenAndServe(":8080", nil))
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+	log.Printf("🟢 Server listening on port %s", port)
+	log.Fatal(http.ListenAndServe(":" + port, nil))
 }

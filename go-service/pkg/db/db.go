@@ -12,6 +12,11 @@ import (
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
+type RawMessage struct {
+    Content   string
+    CreatedAt time.Time
+}
+
 var Conn *sql.DB
 
 // InitDB initializes the global Conn handle.
@@ -238,3 +243,29 @@ func FetchAggregatedSentimentsBetween(start, end time.Time) ([]AggregatedSentime
     return out, rows.Err()
 }
 
+// FetchRawMessagesForCoinBetween pulls all content for one coin in [start,end).
+func FetchRawMessagesForCoinBetween(ctx context.Context, coinID int, start, end time.Time) ([]RawMessage, error) {
+    const q = `
+      SELECT content, created_at
+        FROM raw_messages
+       WHERE currency_id = $1
+         AND created_at >= $2
+         AND created_at <  $3
+       ORDER BY created_at
+    `
+    rows, err := Conn.QueryContext(ctx, q, coinID, start, end)
+    if err != nil {
+        return nil, err
+    }
+    defer rows.Close()
+
+    var out []RawMessage
+    for rows.Next() {
+        var m RawMessage
+        if err := rows.Scan(&m.Content, &m.CreatedAt); err != nil {
+            return nil, err
+        }
+        out = append(out, m)
+    }
+    return out, rows.Err()
+}
