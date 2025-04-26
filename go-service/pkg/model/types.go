@@ -34,20 +34,48 @@ var DefaultMessageScores = map[string][]float64{
 	"8": {0.05, 0.0, 0.05, 0.1, 0.05, 0.0, 0.05, 0.1, 0.05, 0.0},
 }
 
-// CalculateFinalSentiment computes weighted average across questions.
-func CalculateFinalSentiment(weights map[string]float64, messageScores map[string][]float64) float64 {
-	final := 0.0
-	for q, w := range weights {
-		scores, ok := messageScores[q]
-		if !ok || len(scores) == 0 {
-			continue
-		}
-		sum := 0.0
-		for _, v := range scores {
-			sum += v
-		}
-		avg := sum / float64(len(scores))
-		final += w * avg
-	}
-	return final
+// CalculateFinalSentiment re-weights only across questions
+// that actually have scores in messageScores.
+func CalculateFinalSentiment(
+    weights map[string]float64,
+    messageScores map[string][]float64,
+) float64 {
+    // 1) Figure out the sum of weights for questions we do have
+    totalWeight := 0.0
+    for q, scores := range messageScores {
+        if len(scores) == 0 {
+            continue
+        }
+        if w, ok := weights[q]; ok {
+            totalWeight += w
+        }
+    }
+    // Nothing to do if no questions contributed
+    if totalWeight == 0 {
+        return 0
+    }
+
+    // 2) Build the weighted average across only those questions
+    final := 0.0
+    for q, scores := range messageScores {
+        if len(scores) == 0 {
+            continue
+        }
+        w, ok := weights[q]
+        if !ok {
+            continue
+        }
+        // normalize this question’s weight
+        norm := w / totalWeight
+
+        // compute the average score for this question
+        sum := 0.0
+        for _, s := range scores {
+            sum += s
+        }
+        avg := sum / float64(len(scores))
+
+        final += norm * avg
+    }
+    return final
 }

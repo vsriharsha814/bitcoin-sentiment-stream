@@ -6,12 +6,15 @@ import (
     "log"
     "net/http"
     "os"
+	"strings"
 
     "github.com/joho/godotenv"
 
     "github.com/cosmic-hash/CryptoPulse/pkg/config"
     "github.com/cosmic-hash/CryptoPulse/pkg/db"
     handlers "github.com/cosmic-hash/CryptoPulse/pkg/handler"
+	"github.com/cosmic-hash/CryptoPulse/pkg/firebase"
+	 
 )
 
 func main() {
@@ -25,6 +28,7 @@ func main() {
 
     // 2) Init DB (will log fatal if it still can’t connect)
     db.InitDB()
+	firebase.Init()
 
     // 3) Load question mapping
     mappingPath := os.Getenv("QUESTION_MAPPING_FILE")
@@ -39,10 +43,67 @@ func main() {
         log.Fatalf("Error parsing mapping file: %v", err)
     }
 
+// // /alerts → both list (GET) and create (POST)
+// http.HandleFunc("/alerts", func(w http.ResponseWriter, r *http.Request) {
+// 	switch r.Method {
+// 	case http.MethodGet:
+// 		handlers.ListAlertsHandler(w, r)
+// 	case http.MethodPost:
+// 		handlers.CreateAlertHandler(w, r)
+// 	default:
+// 		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+// 	}
+// })
+
+// /alerts/{id} → delete only
+http.HandleFunc("/alerts/", func(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodDelete {
+		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	// the path is "/alerts/{id}"
+	// so everything after "/alerts/" is the id
+	id := strings.TrimPrefix(r.URL.Path, "/alerts/")
+	// inject into the Request as a query param for simplicity
+	q := r.URL.Query()
+	q.Set("id", id)
+	r.URL.RawQuery = q.Encode()
+
+	handlers.DeleteAlertHandler(w, r)
+})
+
+http.HandleFunc("/alerts", func(w http.ResponseWriter, r *http.Request) {
+    switch r.Method {
+    case http.MethodGet:
+        handlers.ListAlertsHandler(w, r)
+
+    case http.MethodPost:
+        handlers.CreateAlertHandler(w, r)
+
+    case http.MethodDelete:
+        // we’ll delete by coinId query param, not Firestore ID
+        coinStr := r.URL.Query().Get("coinId")
+        if coinStr == "" {
+            http.Error(w, "coinId query required", http.StatusBadRequest)
+            return
+        }
+        // inject coinId into the request context so your handler can read it:
+        q := r.URL.Query()
+        q.Set("coinId", coinStr)
+        r.URL.RawQuery = q.Encode()
+
+        handlers.DeleteAlertHandler(w, r)
+
+    default:
+        http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+    }
+})
+
     // 4) Register HTTP & WebSocket handlers
     http.HandleFunc("/", handlers.HelloHandler)
     http.HandleFunc("/sentiment", handlers.SentimentHandler)
     http.HandleFunc("/ws", handlers.WSHandler)
+	http.HandleFunc("/aggregate", handlers.AggregateHandler)
 
     fmt.Println("Server is listening on :8080")
     log.Fatal(http.ListenAndServe(":8080", nil))
