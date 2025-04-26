@@ -10,16 +10,16 @@ const SentimentDashboard: React.FC = () => {
         <div className="dashboard-container">
             <div className="tabs">
                 <button
-                    className={activeTab === 'historical' ? 'tab active' : 'tab'}
-                    onClick={() => setActiveTab('historical')}
-                >
-                    Historical
-                </button>
-                <button
                     className={activeTab === 'live' ? 'tab active' : 'tab'}
                     onClick={() => setActiveTab('live')}
                 >
                     Live
+                </button>
+                <button
+                    className={activeTab === 'historical' ? 'tab active' : 'tab'}
+                    onClick={() => setActiveTab('historical')}
+                >
+                    Historical
                 </button>
             </div>
 
