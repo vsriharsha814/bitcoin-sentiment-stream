@@ -3,7 +3,7 @@ import { Bell, Edit} from 'lucide-react';
 
 export default function CryptoProfilePage() {
   const [darkMode] = useState(true);
-  const [activeTab, setActiveTab] = useState('bitcoin');
+  const [activeTab, setActiveTab] = useState(1);
   
   // Mock data - in a real app this would come from props or context
   const userData = {
@@ -11,9 +11,16 @@ export default function CryptoProfilePage() {
     email: "satoshi@example.com",
     profilePic: "/api/placeholder/150/150",
     coins: [
-      { id: 'bitcoin', name: 'Bitcoin', symbol: 'BTC', price: 59487.23, change: 2.4 },
-      { id: 'ethereum', name: 'Ethereum', symbol: 'ETH', price: 3128.56, change: -1.2 },
-      { id: 'solana', name: 'Solana', symbol: 'SOL', price: 142.85, change: 5.7 }
+      { id: 1, code: 'BTC'},
+      { id: 2, code: 'ETH'},
+      { id: 3, code: 'USDT'},
+      { id: 4, code: 'XRP'},
+      { id: 5, code: 'BNB'},
+      { id: 6, code: 'SOL'},
+      { id: 7, code: 'USDC'},
+      { id: 8, code: 'TRX'},
+      { id: 9, code: 'DOGE'},
+      { id: 10, code: 'ADA'},
     ],
     questions: [
       { id: 1, question: "What's your take on the next BTC halving?", answers: 23 },
@@ -29,13 +36,10 @@ export default function CryptoProfilePage() {
     <div className={`min-h-screen ${darkMode ? 'bg-gray-900 text-pink-300' : 'bg-gray-200 text-pink-600'}`}>
       <div className="container mx-auto px-4 py-8">
         {/* Profile Section */}
-        <div className={`mb-8 p-6 rounded-lg grid grid-cols-1 md:grid-cols-3 gap-6 ${darkMode ? 'bg-gray-800' : 'bg-gray-100'}`}>
+        <div className={`mb-8 p-6 rounded-lg grid grid-cols-1 md:grid-cols-3 gap-6 ${'bg-gray-800'}`}>
           <div className="flex flex-col items-center justify-center">
-            <div className={`relative w-40 h-40 rounded-full overflow-hidden border-4 ${darkMode ? 'border-pink-500' : 'border-pink-400'}`}>
+            <div className={`relative w-40 h-40 rounded-full overflow-hidden border-4 ${'border-pink-500'}`}>
               <img src={userData.profilePic} alt="Profile" className="w-full h-full object-cover" />
-              <button className="absolute bottom-2 right-2 bg-pink-500 p-1 rounded-full">
-                <Edit size={16} className="text-white" />
-              </button>
             </div>
           </div>
           
@@ -49,18 +53,10 @@ export default function CryptoProfilePage() {
             <div className="grid grid-cols-2 gap-4">
               <div className={`p-4 rounded ${darkMode ? 'bg-gray-700' : 'bg-gray-200'}`}>
                 <div className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                  Member Since
+                  Last Login
                 </div>
                 <div className={`text-xl font-bold ${darkMode ? 'text-pink-300' : 'text-pink-600'}`}>
-                  OCT 2023
-                </div>
-              </div>
-              <div className={`p-4 rounded ${darkMode ? 'bg-gray-700' : 'bg-gray-200'}`}>
-                <div className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                  Portfolio Value
-                </div>
-                <div className={`text-xl font-bold ${darkMode ? 'text-pink-300' : 'text-pink-600'}`}>
-                  $21,543.21
+                  Apr 26 2025
                 </div>
               </div>
             </div>
@@ -85,36 +81,10 @@ export default function CryptoProfilePage() {
                     (darkMode ? 'bg-gray-700 border-gray-600 text-gray-400' : 'bg-gray-200 border-gray-300 text-gray-600')
                   }`}
               >
-                {coin.symbol}
+                {coin.code}
               </button>
             ))}
           </div>
-          
-          {/* Active Coin Info */}
-          {userData.coins.map(coin => (
-            <div 
-              key={coin.id} 
-              className={`${activeTab === coin.id ? 'block' : 'hidden'} p-4 border-2 
-                ${darkMode ? 'border-pink-500 bg-gray-700' : 'border-pink-400 bg-gray-50'}`}
-            >
-              <div className="flex justify-between items-center">
-                <div>
-                  <div className={`text-xl font-bold ${darkMode ? 'text-pink-300' : 'text-pink-600'}`}>
-                    {coin.name} ({coin.symbol})
-                  </div>
-                  <div className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                    Current Price
-                  </div>
-                  <div className="text-2xl font-mono">
-                    ${coin.price.toLocaleString()}
-                  </div>
-                </div>
-                <div className={`text-xl font-bold ${coin.change >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                  {coin.change > 0 ? '+' : ''}{coin.change}%
-                </div>
-              </div>
-            </div>
-          ))}
         </div>
 
         {/* User Questions */}
