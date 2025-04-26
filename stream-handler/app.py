@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 import os
 import psycopg2
 import psycopg2.extras
+from psycopg2 import OperationalError, InterfaceError
 import json
 
 app = Flask(__name__)
@@ -263,11 +264,38 @@ def reddit_db_dump():
         """
 
         cur = conn.cursor()
-
         inserted_count = 0
         for post in posts:
             try:
+                # If connection or cursor closed, reopen
+                if conn.closed != 0 or cur.closed:
+                    print("DB connection lost. Reconnecting...")
+                    conn = get_db_connection()
+                    cur = conn.cursor()
+
                 print(f"Inserting post: {post['title']} (score: {post['score']})")
+                cur.execute(insert_query, (
+                    "reddit",
+                    f"reddit_{post['id']}",
+                    post["question_id"],
+                    post["coin_id"],
+                    post["author"],
+                    f"{post['title']} {post['text']}",
+                    get_sentiment_score(f"{post['title']} {post['text']}"),
+                    post["timestamp"],
+                    datetime.now(timezone.utc).isoformat(),
+                    json.dumps({
+                        "score": post["score"],
+                        "num_comments": post["num_comments"]
+                    }),
+                    post["coin"]
+                ))
+                inserted_count += 1
+            except (OperationalError, InterfaceError) as db_err:
+                # On DB errors, reconnect once and retry
+                print(f"DB error: {db_err}. Reconnecting and retrying...")
+                conn = get_db_connection()
+                cur = conn.cursor()
                 cur.execute(insert_query, (
                     "reddit",
                     f"reddit_{post['id']}",
