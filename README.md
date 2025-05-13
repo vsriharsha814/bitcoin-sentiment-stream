@@ -14,7 +14,9 @@
   - [Prerequisites](#prerequisites)
   - [Installation](#installation)
   - [Running Locally](#running-locally)
+- [API Reference](#api-reference)
 - [Demo](#demo)
+- [Future Work & Roadmap](#future-work--roadmap)
 - [Credits](#credits)
 
 ---
@@ -112,8 +114,6 @@
    go build -o aggregator .
    ```
 
----
-
 ### Running Locally
 
 ```bash
@@ -134,23 +134,182 @@ cd ../frontend/my-crypto-app
 npm start
 ```
 
-### 📡 API Reference
+---
 
+## 📡 API Reference
 
+Base URL: `http://localhost:5000` (local) or `https://your-domain.com` (production)
 
+### Reddit Data Endpoints
 
+#### `POST /reddit_posts`
+Fetch posts for selected coins and questions from Reddit.
 
+**Request Body:**
+```json
+{
+  "coins": ["BTC", "ETH", "DOGE"],
+  "questions": ["bullish", "bearish"],
+  "timeframe": "day"
+}
+```
 
+**Response:**
+```json
+{
+  "status": "success",
+  "posts_fetched": 42,
+  "data": [
+    {
+      "id": "abc123",
+      "coin": "BTC",
+      "content": "...",
+      "sentiment_score": 0.75,
+      "timestamp": "2025-05-13T10:00:00Z"
+    }
+  ]
+}
+```
 
+#### `POST /reddit_db_dump`
+Dump fetched posts into the database for historical tracking.
 
+**Request Body:**
+```json
+{
+  "posts": [
+    {
+      "id": "abc123",
+      "coin": "BTC",
+      "content": "...",
+      "sentiment_score": 0.75
+    }
+  ]
+}
+```
 
+**Response:**
+```json
+{
+  "status": "success",
+  "posts_inserted": 1,
+  "message": "Posts successfully inserted into database"
+}
+```
 
+#### `GET /reddit_status`
+Verify Reddit API authentication and connection status.
 
+**Response:**
+```json
+{
+  "status": "connected",
+  "authenticated": true,
+  "rate_limit_remaining": 580,
+  "reddit_username": "CryptoPulseBot"
+}
+```
 
+### Testing Endpoints
 
+#### `POST /test_insert`
+Insert a sample record into the database for testing purposes.
 
+**Request Body:**
+```json
+{
+  "test_data": {
+    "coin": "TEST",
+    "message": "This is a test record",
+    "sentiment": 0.5
+  }
+}
+```
 
+**Response:**
+```json
+{
+  "status": "success",
+  "test_record_id": "12345",
+  "message": "Test record successfully inserted"
+}
+```
 
+### Error Responses
 
-   
-   
+All endpoints may return the following error formats:
+
+```json
+{
+  "status": "error",
+  "error_code": "RATE_LIMIT_EXCEEDED",
+  "message": "Reddit API rate limit exceeded. Please try again later.",
+  "retry_after": 3600
+}
+```
+
+Common error codes:
+- `INVALID_CREDENTIALS`: Authentication credentials are invalid
+- `RATE_LIMIT_EXCEEDED`: API rate limit reached
+- `DATABASE_ERROR`: Database connection or query error
+- `INVALID_REQUEST`: Malformed request body or missing parameters
+
+---
+
+## 📸 Demo
+
+<p align="center">
+  <img src="./demo1.png" alt="CryptoPulse Dashboard" width="800"/>
+</p>
+<p align="center">
+  <img src="./demo2.png" alt="CryptoPulse Dashboard" width="800"/>
+</p>
+
+The dashboard displays per-coin sentiment trends, driven by social discussions. Click on a coin or a question to explore what users are saying in real-time.
+
+---
+
+## 🔮 Future Work & Roadmap
+
+- **Q3 2025**: Expand sentiment analysis to support multiple languages and diverse news sources
+- **Q4 2025**: Enable real-time detection of rising tokens and social sentiment surges
+- **Q1 2026**: Add Telegram and Discord scraping for deeper community insights
+- **Q2 2026**: Fine-tune models to detect sarcasm and crypto-specific memes
+- **Q3 2026**: Localize sentiment based on region for regulatory impact tracking
+
+---
+
+## 🙏 Credits
+
+- **Built by**: Harsha Vallabhaneni and students at CU Boulder
+- **Models**: VADER (MIT), HuggingFace Transformers
+- **Infrastructure**: Firebase, PostgreSQL (Neon), Docker, GCP
+- **Versioning**: GitHub
+- **Task Management**: Jira
+- **UI**: React + Recharts
+
+---
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request. For major changes, please open an issue first to discuss what you would like to change.
+
+1. Fork the project
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+---
+
+## 📞 Contact
+
+Sri Harsha Vallabhaneni - [@vsriharsha814](https://github.com/vsriharsha814)
+Email - srva5218@colorado.edu
+Project Link: [https://github.com/vsriharsha814/crypto-sentiment-stream](https://github.com/vsriharsha814/crypto-sentiment-stream)
